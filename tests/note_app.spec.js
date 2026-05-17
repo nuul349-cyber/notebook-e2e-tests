@@ -1,4 +1,5 @@
 const { test, expect, describe, beforeEach } = require('@playwright/test')
+const { loginWith, createNote } = require('./helper')
 
 describe('Note app', () => {
   beforeEach(async ({ page, request }) => {
@@ -21,19 +22,13 @@ describe('Note app', () => {
   })
 
   test('user can log in', async ({ page }) => {
-    await page.getByRole('button', {name: 'log in'}).click()
-    await page.getByRole('textbox', { name: 'username' }).fill('admin')
-    await page.getByRole('textbox', { name: 'password' }).fill('passw')
+    await loginWith(page, 'admin', 'passw')
 
-    await page.getByRole('button', { name: 'login' }).click()
     await expect(page.getByText('logged in as: Admin')).toBeVisible()
   })
 
   test('login fails with wrong password', async ({ page }) => {
-    await page.getByRole('button', { name: 'log in' }).click()
-    await page.getByLabel('username').fill('admin')
-    await page.getByLabel('password').fill('wrongpassword')
-    await page.getByRole('button', { name: 'login' }).click()
+    await loginWith(page, 'admin', 'wrongpassword')
     
     const errorDiv = page.locator('.error')
     await expect(errorDiv).toContainText('wrong credentials')
@@ -45,24 +40,18 @@ describe('Note app', () => {
 
   describe('when logged in', ()=> {
     beforeEach(async ({page}) => {
-      await page.getByRole('button', { name:'log in' }).click()
-      await page.getByLabel('username').fill('admin')
-      await page.getByLabel('password').fill('passw')
-      await page.getByRole('button', { name: 'login'}).click()
+      await loginWith(page, 'admin', 'passw')
     })
 
     test('a new note can be created', async ({ page }) => {
-      await page.getByRole('button', { name: 'new note' }).click()
-      await page.getByRole('textbox').fill('a note created by playwright')
-      await page.getByRole('button', { name: 'save' }).click()
+      await createNote(page, 'a note created by playwright')
+
       await expect(page.getByText('a note created by playwright')).toBeVisible()
     })
 
     describe('and a note exists', () => {
       beforeEach(async ({ page }) => {
-        await page.getByRole('button', { name: 'new note'}).click()
-        await page.getByRole('textbox').fill('another note by playwright')
-        await page.getByRole('button', { name: 'save' }).click()
+        await createNote(page, 'another note by playwright')
       })
 
       test('importance can be changed', async ({ page }) => {
