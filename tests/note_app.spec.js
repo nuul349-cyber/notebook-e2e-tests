@@ -29,6 +29,20 @@ describe('Note app', () => {
     await expect(page.getByText('logged in as: Admin')).toBeVisible()
   })
 
+  test('login fails with wrong password', async ({ page }) => {
+    await page.getByRole('button', { name: 'log in' }).click()
+    await page.getByLabel('username').fill('admin')
+    await page.getByLabel('password').fill('wrongpassword')
+    await page.getByRole('button', { name: 'login' }).click()
+    
+    const errorDiv = page.locator('.error')
+    await expect(errorDiv).toContainText('wrong credentials')
+    await expect(errorDiv).toHaveCSS('border-style', 'solid')
+    await expect(errorDiv).toHaveCSS('color', 'rgb(255, 0, 0)')
+
+    await expect(page.getByText('logged in as: Admin')).not.toBeVisible()
+  })
+
   describe('when logged in', ()=> {
     beforeEach(async ({page}) => {
       await page.getByRole('button', { name:'log in' }).click()
